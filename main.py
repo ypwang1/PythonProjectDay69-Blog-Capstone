@@ -155,20 +155,21 @@ def get_all_posts():
 def show_post(post_id):
     requested_post = db.get_or_404(BlogPost, post_id)
     requested_comments = db.session.execute(db.select(Comment).where(post_id==post_id)).scalars().all()
-    print(requested_comments)
     form = CommentForm()
-    if form.validate_on_submit() and current_user.is_authenticated:
-        body = form.body.data
-        new_comment = Comment(text=body,
-                              comment_author=current_user,
-                              parent_post=requested_post
-                              )
-        db.session.add(new_comment)
-        db.session.commit()
-        return redirect(url_for('show_post', post_id=requested_post.id))
-    else:
-        flash("Please log in first")
-    return render_template("post.html", post=requested_post, form=form, current_user=current_user, comments=requested_comments)
+    if form.validate_on_submit():
+        if current_user.is_authenticated:
+            body = form.body.data
+            new_comment = Comment(text=body,
+                                  comment_author=current_user,
+                                  parent_post=requested_post
+                                  )
+            db.session.add(new_comment)
+            db.session.commit()
+            return redirect(url_for('show_post', post_id=requested_post.id))
+        else:
+            flash("Please log in first")
+            return redirect(url_for('login'))
+    return render_template("post.html", post=requested_post, form=form, current_user=current_user, comments=requested_comments, logged_in = current_user.is_authenticated)
 
 
 # TODO: Use a decorator so only an admin user can create a new post
@@ -232,8 +233,6 @@ def about():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
-
-
 
 
 if __name__ == "__main__":
