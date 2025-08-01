@@ -67,27 +67,33 @@
               >
             </li>
             <!-- TODO: Only show Login/Register if user is logged out. Otherwise show "Log Out" -->
-            <li class="nav-item">
-              <a
-                class="nav-link px-lg-3 py-3 py-lg-4"
-                href="{{ url_for('login') }}"
-                >Login</a
-              >
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link px-lg-3 py-3 py-lg-4"
-                href="{{ url_for('register') }}"
-                >Register</a
-              >
-            </li>
-            <li class="nav-item">
-              <a
-                class="nav-link px-lg-3 py-3 py-lg-4"
-                href="{{ url_for('logout') }}"
-                >Log Out</a
-              >
-            </li>
+            {% if not logged_in %}
+              <li class="nav-item">
+                <a
+                  class="nav-link px-lg-3 py-3 py-lg-4"
+                  href="{{ url_for('login') }}"
+                  >Login</a
+                >
+              </li>
+
+
+              <li class="nav-item">
+                <a
+                  class="nav-link px-lg-3 py-3 py-lg-4"
+                  href="{{ url_for('register') }}"
+                  >Register</a
+                >
+              </li>
+            {% endif %}
+            {% if logged_in %}
+              <li class="nav-item">
+                <a
+                  class="nav-link px-lg-3 py-3 py-lg-4"
+                  href="{{ url_for('logout') }}"
+                  >Log Out</a
+                >
+              </li>
+            {% endif %}
             <li class="nav-item">
               <a
                 class="nav-link px-lg-3 py-3 py-lg-4"
