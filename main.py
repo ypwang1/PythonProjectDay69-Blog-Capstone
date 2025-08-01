@@ -1,4 +1,6 @@
 from datetime import date
+from wsgiref.validate import validator
+
 from flask import Flask, abort, render_template, redirect, url_for, flash
 from flask_bootstrap import Bootstrap5
 from flask_ckeditor import CKEditor
@@ -11,6 +13,8 @@ from sqlalchemy import ForeignKey
 from typing import List
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
+from wtforms.validators import DataRequired
+
 # Import your forms from the forms.py
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentForm
 
@@ -45,8 +49,8 @@ class BlogPost(db.Model):
     body: Mapped[str] = mapped_column(Text, nullable=False)
     author_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("users.id"))
     author = relationship('User', back_populates="posts")
-
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
+    comments = relationship('Comment', back_populates='parent_post')
 
 
 # TODO: Create a User table for all your registered users. 
@@ -57,6 +61,17 @@ class User(UserMixin, db.Model):
     email: Mapped[str] =mapped_column(String(100), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String(250), nullable=False)
     posts = relationship("BlogPost", back_populates='author')
+    comments = relationship("Comment", back_populates='comment_author')
+
+# TODO: Create a Comment table
+class Comment(db.Model):
+    __tablename__ = 'comments'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    text: Mapped[str] = mapped_column(String(1000), nullable=False)
+    author_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("users.id"))
+    comment_author = relationship('User', back_populates='comments')
+    post_id: Mapped[int] = mapped_column(Integer, db.ForeignKey("blog_posts.id"))
+    parent_post = relationship('BlogPost', back_populates='comments')
 
 with app.app_context():
     db.create_all()
@@ -125,10 +140,16 @@ def get_all_posts():
 
 
 # TODO: Allow logged-in users to comment on posts
-@app.route("/post/<int:post_id>")
+@app.route("/post/<int:post_id>", methods=['GET', 'POST'])
 def show_post(post_id):
     requested_post = db.get_or_404(BlogPost, post_id)
     form = CommentForm()
+    if form.validate_on_submit():
+        body = form.body.data
+        new_comment = Comment(text=body)
+        db.session.add(new_comment)
+        db.session.commit()
+        return redirect(url_for('show_post', post_id=requested_post.id))
     return render_template("post.html", post=requested_post, form=form, current_user=current_user)
 
 
