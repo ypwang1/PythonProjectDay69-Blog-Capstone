@@ -143,14 +143,21 @@ def get_all_posts():
 @app.route("/post/<int:post_id>", methods=['GET', 'POST'])
 def show_post(post_id):
     requested_post = db.get_or_404(BlogPost, post_id)
+    requested_comments = db.session.execute(db.select(Comment).where(post_id==post_id)).scalars().all()
+    print(requested_comments)
     form = CommentForm()
-    if form.validate_on_submit():
+    if form.validate_on_submit() and current_user.is_authenticated:
         body = form.body.data
-        new_comment = Comment(text=body)
+        new_comment = Comment(text=body,
+                              comment_author=current_user,
+                              parent_post=requested_post
+                              )
         db.session.add(new_comment)
         db.session.commit()
         return redirect(url_for('show_post', post_id=requested_post.id))
-    return render_template("post.html", post=requested_post, form=form, current_user=current_user)
+    else:
+        flash("Please log in first")
+    return render_template("post.html", post=requested_post, form=form, current_user=current_user, comments=requested_comments)
 
 
 # TODO: Use a decorator so only an admin user can create a new post

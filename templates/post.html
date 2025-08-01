@@ -41,19 +41,22 @@
         {{ ckeditor.load() }}
         {{ ckeditor.config(name='body') }}
         {{ render_form(form) }}
+        <p class="flash">{{ message }}</p>
         <div class="comment">
           <!-- TODO: Show all the comments on a post -->
-          <ul class="commentList">
-            <li>
-              <div class="commenterImage">
-                <img src="../static/assets/img/default-profile.jpg" />
-              </div>
-              <div class="commentText">
-                <p>Some comment</p>
-                <span class="date sub-text">comment author name</span>
-              </div>
-            </li>
-          </ul>
+          {% for comment in comments %}
+            <ul class="commentList">
+              <li>
+                <div class="commenterImage">
+                  <img src="../static/assets/img/default-profile.jpg" />
+                </div>
+                <div class="commentText">
+                  <p>{{ comment.text|safe }}</p>
+                  <span class="date sub-text">{{ comment.comment_author.name }}</span>
+                </div>
+              </li>
+            </ul>
+         {% endfor %}
         </div>
       </div>
     </div>
